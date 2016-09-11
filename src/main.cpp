@@ -54,6 +54,7 @@ ostream& operator<< (ostream& stream, md5 val)
 }
 
 struct entry;
+struct path;
 
 struct utils
 {
@@ -61,13 +62,40 @@ struct utils
   static off_t getFileSize(int fd);
   static bool computeMD5(const entry& entry);
   
-  static std::vector<entry> enumerateDirectory(const string& folder, function<bool(const string&)> filter, bool recursive, bool verbose = false);
+  static std::vector<entry> enumerateDirectory(const path& folder, function<bool(const string&)> filter, bool recursive, bool verbose = false);
   
   static std::string humanReadableSize(off_t s);
 };
 
+struct path
+{
+  enum class type
+  {
+    ANY,
+    MASTER,
+    SLAVE
+  };
+  
+  string folder;
+  type type;
+  
+  path(const char* folder, enum type type = type::ANY) : path(string(folder), type) { }
+  path(string folder, enum type type = type::ANY) : folder(folder), type(type) { }
+  
+  operator string() const { return folder; }
+  operator const char*() const { return folder.c_str(); }
+  
+  path derive(string subfolder) const
+  {
+    return {folder + "/" + subfolder, type};
+  }
+};
+
+ostream& operator<< (ostream& stream, path val) { stream << val.folder; return stream; }
+
 struct entry
 {
+  std::reference_wrapper<const path> path;
   std::string fileName;
   mutable off_t size;
   mutable md5 md5;
@@ -77,7 +105,7 @@ private:
   mutable bool hasMd5;
   
 public:
-  entry(std::string fileName) : fileName(fileName), size(0), hasSize(false), hasMd5(false) { }
+  entry(const struct path& path, string fileName) : path(path), fileName(fileName), size(0), hasSize(false), hasMd5(false) { }
   
   bool isSizeCached() const { return hasSize; }
   bool isMD5Cached() const { return hasMd5; }
@@ -145,7 +173,7 @@ bool utils::computeMD5(const entry& entry)
   return true;
 }
 
-vector<entry> utils::enumerateDirectory(const string& folder, function<bool(const string&)> filter, bool recursive, bool verbose)
+vector<entry> utils::enumerateDirectory(const path& folder, function<bool(const string&)> filter, bool recursive, bool verbose)
 {
   vector<entry> files;
   
@@ -154,7 +182,7 @@ vector<entry> utils::enumerateDirectory(const string& folder, function<bool(cons
   
   DIR *d;
   struct dirent *dir;
-  d = opendir(folder.c_str());
+  d = opendir(folder);
   if (d)
   {
     while ((dir = readdir(d)) != NULL)
@@ -165,12 +193,12 @@ vector<entry> utils::enumerateDirectory(const string& folder, function<bool(cons
         continue;
       else if (dir->d_type == DT_DIR && recursive)
       {
-        auto rfiles = enumerateDirectory(folder + "/" + name, filter, true, verbose);
+        auto rfiles = enumerateDirectory(folder.derive(name), filter, true, verbose);
         files.reserve(files.size() + rfiles.size());
         files.insert(files.end(), rfiles.begin(), rfiles.end());
       }
       else if (dir->d_type == DT_REG)
-        files.push_back(entry(folder + "/" + name));
+        files.push_back(entry(folder, folder.derive(name)));
     }
     
     closedir(d);
@@ -225,11 +253,9 @@ struct matcher
 
 
 int main(int argc, const char * argv[]) {
-  string masterPath = "/Volumes/Vicky/Photos-SSD";
-  string slavePath = "/Volumes/Vicky/-----Photos";
+  path masterPath = "/Users/jack/Desktop/romset";
   
   auto mfiles = utils::enumerateDirectory(masterPath, [](const string& name) { return true; }, true, true);
-  auto sfiles = utils::enumerateDirectory(slavePath, [](const string& name) { return true; }, true, true);
 
   struct info
   {
@@ -243,15 +269,9 @@ int main(int argc, const char * argv[]) {
     return i;
   });
   
-  inf = accumulate(sfiles.begin(), sfiles.end(), inf, [] (info i, const entry& e) {
-    ++i.count;
-    i.size += e.getSize();
-    return i;
-  });
-  
   cout << "found " << inf.count << " files, total size: " << utils::humanReadableSize(inf.size) << endl;
   
-  vector<match> potentialMatches = matcher::findPotentialMatches(mfiles, sfiles);
+  /*vector<match> potentialMatches = matcher::findPotentialMatches(mfiles, sfiles);
   
   cout << "found " << potentialMatches.size() << " potential matches " << endl;
   
@@ -259,15 +279,33 @@ int main(int argc, const char * argv[]) {
   
   copy_if(potentialMatches.begin(), potentialMatches.end(), back_inserter(verifiedMatches), [](const match& m) { return matcher::verifyMatch(m); });
 
-  cout << "found " << potentialMatches.size() << " verified matches " << endl;
+  cout << "found " << potentialMatches.size() << " verified matches " << endl;*/
 
   
-  /*for (const auto& f : files)
-  {
-    off_t size = f.getSize();
-    md5 md5 = f.getMD5();
+  //for (const auto& f : files)
+  //{
+  //  off_t size = f.getSize();
+  //  md5 md5 = f.getMD5();
     
-    cout << f.getName() << " size: " << size << " md5: " << md5 << endl;
-  }*/
+  //  cout << f.getName() << " size: " << size << " md5: " << md5 << endl;
+  //}
 
 }
+
+/*
+#include <boost/progress.hpp>
+#include <boost/timer.hpp>
+#include <vector>
+
+int main(int argc,char *argv[])
+{
+  const unsigned long expected_count=20;
+  boost::progress_display show_progress( expected_count );
+  for(int i=0;i!=expected_count;++i)
+  {
+    volatile std::vector<int> v(1024*1024*16);
+    ++show_progress;
+  }
+  return 0;
+}
+*/

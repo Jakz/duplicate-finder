@@ -24,7 +24,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0442BC1F1D85F68B00C768AD /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../src/main.cpp; sourceTree = SOURCE_ROOT; };
+		042BC2BA1D85F99A00ADD70F /* ui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui.h; sourceTree = "<group>"; };
+		0442BC1F1D85F68B00C768AD /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		0442BC211D85F6B000C768AD /* libcrypto.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcrypto.tbd; path = usr/lib/libcrypto.tbd; sourceTree = SDKROOT; };
 		04D20ED61D83AE8800D130DD /* DuplicateFinder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = DuplicateFinder; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -45,7 +46,7 @@
 			isa = PBXGroup;
 			children = (
 				0442BC211D85F6B000C768AD /* libcrypto.tbd */,
-				04D20ED81D83AE8800D130DD /* DuplicateFinder */,
+				04D20ED81D83AE8800D130DD /* src */,
 				04D20ED71D83AE8800D130DD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,12 +59,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		04D20ED81D83AE8800D130DD /* DuplicateFinder */ = {
+		04D20ED81D83AE8800D130DD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				042BC2BA1D85F99A00ADD70F /* ui.h */,
 				0442BC1F1D85F68B00C768AD /* main.cpp */,
 			);
-			path = DuplicateFinder;
+			name = src;
+			path = ../src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -213,7 +216,10 @@
 		04D20EDE1D83AE8800D130DD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/opt/openssl/include,
+					/usr/local/Cellar/boost/1.60.0_2/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/openssl/1.0.2h_1/lib,
@@ -226,7 +232,10 @@
 		04D20EDF1D83AE8800D130DD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/opt/openssl/include;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/opt/openssl/include,
+					/usr/local/Cellar/boost/1.60.0_2/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/local/Cellar/openssl/1.0.2h_1/lib,
